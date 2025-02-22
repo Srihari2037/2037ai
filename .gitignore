@@ -72,3 +72,5 @@ out/
 # Ignore unnecessary folders
 2037ai.com/
 2037ai.git/
+# Ignore git-filter-repo directory
+git-filter-repo/
