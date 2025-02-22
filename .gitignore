@@ -77,3 +77,5 @@ git-filter-repo/
 # Ignore environment files
 .env
 ".env" 
+".env" 
+".env" 
