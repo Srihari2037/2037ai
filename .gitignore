@@ -74,3 +74,6 @@ out/
 2037ai.git/
 # Ignore git-filter-repo directory
 git-filter-repo/
+# Ignore environment files
+.env
+".env" 
