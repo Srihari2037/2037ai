@@ -69,3 +69,6 @@ out/
 
 # 🚀 Git Ignore `.gitignore` Itself (For Safety)
 !.gitignore
+# Ignore unnecessary folders
+2037ai.com/
+2037ai.git/
