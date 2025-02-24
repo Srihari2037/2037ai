@@ -80,3 +80,4 @@ git-filter-repo/
 ".env" 
 ".env" 
 ".env" 
+.vercel
