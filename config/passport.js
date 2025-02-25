@@ -1,13 +1,19 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const User = require("../models/User"); // Ensure this file exists
+const User = require("../models/User");
+
+// Determine the callback URL based on NODE_ENV
+const callbackURL =
+  process.env.NODE_ENV === "production"
+    ? process.env.GOOGLE_CALLBACK_URL_PROD
+    : process.env.GOOGLE_CALLBACK_URL;
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.BACKEND_URL + "/api/auth/google/callback", // Make sure this is correct
+      callbackURL: callbackURL,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -29,12 +35,12 @@ passport.use(
   )
 );
 
-// ✅ Serialize User
+// Serialize User
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// ✅ Deserialize User
+// Deserialize User
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);

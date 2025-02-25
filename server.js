@@ -6,10 +6,10 @@ const MongoStore = require("connect-mongo");
 const passport = require("passport");
 const connectDB = require("./config/dbConnect");
 
-// Load environment variables
+// 🔹 Load environment variables
 dotenv.config();
 
-// Required environment variables check
+// 🔹 Required environment variables check
 const requiredEnvVars = [
   "MONGO_URI",
   "SESSION_SECRET",
@@ -24,102 +24,59 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
-async function createServer() {
-  await connectDB();
+// 🔹 Connect to MongoDB
+connectDB();
 
-  const app = express();
+const app = express();
 
-  if (process.env.NODE_ENV === "production") {
-    app.set("trust proxy", 1);
-  }
+// 🔹 Middleware
+app.use(express.json()); // ✅ Parses incoming JSON requests
+app.use(express.urlencoded({ extended: true })); // ✅ Parses URL-encoded requests
 
-  // Passport configuration
-  require("./config/passport");
-
-  app.use(
-    cors({
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "DELETE"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-    })
-  );
-
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
-
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
-        collectionName: "sessions",
-      }),
-      cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      },
-    })
-  );
-
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  // Mount API routes
-  app.use("/api/auth", require("./routes/authRoutes"));
-  app.use("/api/leads", require("./routes/leadRoutes"));
-
-  // Health Check Route
-  app.get("/", (req, res) => res.send("✅ 2037AI Backend Running!"));
-
-  // Check if user is authenticated
-  app.get("/api/auth/user", (req, res) => {
-    return req.isAuthenticated()
-      ? res.json(req.user)
-      : res.status(401).json({ message: "Unauthorized - Please log in" });
-  });
-
-  // 404 Error Handler
-  app.use((req, res) => {
-    res.status(404).json({ error: "Not Found" });
-  });
-
-  // Global Error Handler
-  app.use((err, req, res, next) => {
-    console.error("❌ Server Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  });
-
-  return app;
-}
-
-createServer()
-  .then((app) => {
-    if (!process.env.VERCEL) {
-      // Running locally: start the server
-      const PORT = process.env.PORT || 5000;
-      const server = app.listen(PORT, () =>
-        console.log(`✅ Server running on port ${PORT}`)
-      );
-
-      process.on("uncaughtException", (err) => {
-        console.error("Uncaught Exception:", err);
-        server.close(() => process.exit(1));
-      });
-      process.on("unhandledRejection", (err) => {
-        console.error("Unhandled Rejection:", err);
-        server.close(() => process.exit(1));
-      });
-    } else {
-      // On Vercel: export the app as a serverless function
-      module.exports = app;
-    }
+// 🔹 CORS Configuration
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"], // Restrict allowed methods
   })
-  .catch((error) => {
-    console.error("❌ Failed to connect to MongoDB or start server:", error);
-    process.exit(1);
-  });
+);
+
+// 🔹 Session Configuration (Stored in MongoDB)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // Set true for HTTPS
+      httpOnly: true, // Prevents client-side access
+      sameSite: "lax", // Prevents CSRF attacks
+    },
+  })
+);
+
+// 🔹 Passport Authentication Middleware
+app.use(passport.initialize());
+app.use(passport.session());
+require("./config/passport"); // Ensure passport config is loaded
+
+// 🔹 Routes
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/leads", require("./routes/leadRoutes"));
+
+// 🔹 Health Check Route
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "✅ Server is running!" });
+});
+
+// 🔹 Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("❌ Server Error:", err);
+  res.status(500).json({ message: "Internal Server Error" });
+});
+
+// 🔹 Start Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
