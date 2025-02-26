@@ -1,7 +1,20 @@
 const express = require("express");
 const passport = require("passport");
+const { signup, login, logout } = require("../controllers/authController");
 
 const router = express.Router();
+
+// Debug middleware: Log all requests that hit this router.
+router.use((req, res, next) => {
+  console.log(`[AuthRoutes] ${req.method} ${req.url}`);
+  next();
+});
+
+// 🔹 Temporary Test Route (GET)
+// Visit https://your-render-url/api/auth/test to see if routing works.
+router.get("/test", (req, res) => {
+  res.json({ message: "Test route works" });
+});
 
 // 🔹 Google OAuth Login Route
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -11,23 +24,20 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     failureRedirect: "/login-failed",
-    session: true, // Ensures session is used
+    session: true,
   }),
   (req, res) => {
-    // Redirect user to frontend after login
     res.redirect(process.env.FRONTEND_URL || "http://localhost:3000");
   }
 );
 
-// 🔹 Logout Route (Destroy session & clear cookies)
-router.get("/logout", (req, res, next) => {
-  req.logout((err) => {
-    if (err) return next(err);
-    req.session.destroy(() => {
-      res.clearCookie("connect.sid"); // Clears session cookie
-      return res.json({ message: "Logged out successfully" });
-    });
-  });
-});
+// 🔹 Signup Route (POST)
+router.post("/signup", signup);
+
+// 🔹 Login Route (POST)
+router.post("/login", login);
+
+// 🔹 Logout Route (GET)
+router.get("/logout", logout);
 
 module.exports = router;
