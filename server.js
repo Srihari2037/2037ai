@@ -54,7 +54,6 @@ app.use(
       autoRemoveInterval: 10, // Removes expired sessions every 10 minutes
     }),
     cookie: {
-      // If running in production, cookies are secure. For local development, consider using "lax" instead of "none"
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",

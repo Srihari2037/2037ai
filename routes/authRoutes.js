@@ -25,7 +25,7 @@ router.post("/signup", signup);
 // 🔹 Login Route (POST)
 router.post("/login", login);
 
-// 🔹 Logout Route (GET or POST as preferred)
+// 🔹 Logout Route (GET)
 router.get("/logout", logout);
 
 module.exports = router;
