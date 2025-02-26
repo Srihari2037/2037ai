@@ -9,13 +9,14 @@ const connectDB = require("./config/dbConnect");
 // 🔹 Load environment variables
 dotenv.config();
 
-// 🔹 Check for required environment variables (but don't exit process)
+// 🔹 Check for required environment variables
 const requiredEnvVars = [
   "MONGO_URI",
   "SESSION_SECRET",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
   "FRONTEND_URL",
+  "JWT_SECRET",
 ];
 
 const missingVars = requiredEnvVars.filter((env) => !process.env[env]);
@@ -35,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 // 🔹 CORS Configuration
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "*", // Allow frontend or fallback to all origins
+    origin: process.env.FRONTEND_URL, // Ensure this matches your frontend domain
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
@@ -44,7 +45,7 @@ app.use(
 // 🔹 Session Configuration (Stored in MongoDB)
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "fallbackSecret", // Ensure a default in dev mode
+    secret: process.env.SESSION_SECRET || "fallbackSecret",
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
@@ -53,9 +54,10 @@ app.use(
       autoRemoveInterval: 10, // Removes expired sessions every 10 minutes
     }),
     cookie: {
-      secure: process.env.NODE_ENV === "production", // Secure in production
+      // If running in production, cookies are secure. For local development, consider using "lax" instead of "none"
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   })
 );
@@ -77,7 +79,7 @@ app.get("/", (req, res) => {
 // 🔹 Global Error Handler
 app.use((err, req, res, next) => {
   console.error("❌ Server Error:", err);
-  res.status(500).json({ message: "Internal Server Error" });
+  res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 
 // 🔹 Start Server
