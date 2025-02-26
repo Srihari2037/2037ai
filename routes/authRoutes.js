@@ -4,10 +4,10 @@ const { signup, login, logout } = require("../controllers/authController");
 
 const router = express.Router();
 
-// 🔹 Google OAuth Login Route
+// ✅ Google OAuth Login Route
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-// 🔹 Google OAuth Callback Route
+// ✅ Google OAuth Callback Route
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -19,13 +19,13 @@ router.get(
   }
 );
 
-// 🔹 Signup Route (POST)
+// ✅ Signup Route (POST)
 router.post("/signup", signup);
 
-// 🔹 Login Route (POST)
+// ✅ Login Route (POST)
 router.post("/login", login);
 
-// 🔹 Logout Route (GET)
+// ✅ Logout Route (GET)
 router.get("/logout", logout);
 
 module.exports = router;
